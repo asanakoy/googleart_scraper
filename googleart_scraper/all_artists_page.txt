@@ -1,0 +1,112 @@
+https://www.google.com/culturalinstitute/beta/api/objects/category?categoryId=artist&s=30&tab=pop&o=54&hl=en&_reqid=108028&rt=j
+https://www.google.com/culturalinstitute/beta/api/objects/category?categoryId=artist&s=30&tab=pop&o=84&hl=en&_reqid=208028&rt=j
+https://www.google.com/culturalinstitute/beta/api/objects/category?categoryId=artist&s=30&tab=pop&o=114&hl=en&_reqid=308028&rt=j
+https://www.google.com/culturalinstitute/beta/api/objects/category?categoryId=artist&s=30&tab=pop&o=144&hl=en&_reqid=408028&rt=j
+
+)]}' [[["stella.pr", "PopularAssets:e18e8ada-c309-47a0-b781-6abceaa13892",…], ["e", 2, null, null, 6514]]]
+0:[["stella.pr", "PopularAssets:e18e8ada-c309-47a0-b781-6abceaa13892",…], ["e", 2, null, null, 6514]]
+    0:["stella.pr", "PopularAssets:e18e8ada-c309-47a0-b781-6abceaa13892",…]
+        0:"stella.pr"
+        1:"PopularAssets:e18e8ada-c309-47a0-b781-6abceaa13892"
+        2:[["Émile Gallé", "33 items",…], ["Pierre Bonnard", "17 items",…], ["Edward Lear", "433 items",…],…]
+        3:174
+        4:5010
+1:["e", 2, null, null, 6514]
+
+https://www.google.com/culturalinstitute/beta/api/objects/category?categoryId=artist&s=30&tab=pop&o=174&hl=en&_reqid=508028&rt=j
+
+
+Array example:
+"""
+<script type="text/javascript" nonce="nOxmA6O3KayJIBT/U164+EvrRrU">
+window.INIT_data = {};
+window.INIT_data['Category:fc04e832-ba52-47db-83c9-1c32832f06c5'] =
+[
+    "stella.catp",
+    "Category:fc04e832-ba52-47db-83c9-1c32832f06c5",
+    "artist",
+    "Artists",
+    "https://lh4.ggpht.com/Qzp__Hdrg5nJmjwCnnOJPHMx-8DTGvr85pPNPnVt0wsk9_T3X5O-M-5EXomo\u003dn",
+    [
+        "stella.pr",
+        "PopularAssets:5aa317ef-441c-41a1-b72c-89439b70eb6a",
+        [
+            [
+                "Rembrandt",
+                "1,528 items",
+                "//lh3.ggpht.com/Duc0qu-vo46VO_A6vN8AZ61a7Vjsa26TLzCkw8Rh8Px5Jg35ZHlr3eIGkOm3",
+                "/entity/m0bskv2?categoryId\u003dartist",
+                3,null,null,null,null,null,null,null,null,null,null,null,[]
+            ],
+            [
+                "Vincent van Gogh",
+                "211 items",
+                "//lh6.ggpht.com/Gl1enlNiKinw0oyRlaXm-q0SooZt7Y75UXtccCE0nK_940ys3hK4K85IxHva",
+                "/entity/m07_m2?categoryId\u003dartist",
+                3,null,null,null,null,null,null,null,null,null,null,null,[]
+            ],
+            ...,
+            [
+                "Hans Holbein the Younger",
+                "248 items",
+                "//lh3.ggpht.com/s47W743jWHKcUvTDwmrqy2eq2dNOqRa4gZ_wSpkIoIjfx5OqwTDNP-hw6rH2",
+                "/entity/m0cy9m?categoryId\u003dartist",3,null,null,null,null,null,null,null,null,null,null,null,[]
+            ]
+        ],
+        54,
+        5010
+    ],
+    [
+        [
+            "A",
+            [
+                "stella.pr",
+                "PrefixedAssets:0378fdcb-8cfd-4d13-886a-82b049a4c5c5",
+                [
+                    [
+                        "A.C.C",
+                        "5 items",
+                        "//lh4.ggpht.com/Rvbx5TPAuY92Zhu2fAqjQkcfwUHNiexOpOa-jVV930b1ZYQp6T4mr21ZfjNX",
+                        "/entity/t218rckcqk9?categoryId\u003dartist",
+                        3,null,null,null,null,null,null,null,null,null,null,null,[]
+                    ],
+                    [
+                        "Ivan Aivazovsky",
+                        "8 items",
+                        "//lh5.ggpht.com/dLIW0cKzmYR7q6O3Ouqx3KuZexWA24G6VMxYxh7LGPoEU26YGDYcdJfwRM8T",
+                        "/entity/m039dtp?categoryId\u003dartist",
+                        3,null,null,null,null,null,null,null,null,null,null,null,[]
+                    ]
+                ],
+                54,
+                224
+            ]
+        ],
+        [
+            "B",
+            [
+                "stella.pr",
+                "PrefixedAssets:9bb6648e-38dc-4b00-84af-c29bfdbb7824",
+                [
+                    [
+                        "B.Shanti",
+                        "4 items",
+                        "//lh6.ggpht.com/gZjKbSNyEjOUUxXF3DJYWT_46aLRjDpoFXNVlhjby5brHVCydUxIohV568Y",
+                        "/entity/t219d95gqw0?categoryId\u003dartist"
+                        ,3,null,null,null,null,null,null,null,null,null,null,null,[]
+                    ],
+                    [
+                        "Zumi",
+                        "5 items",
+                        "//lh5.ggpht.com/fJ0chDCa-VLhyVeAEfT95tTeLVmsbOh8gB0pfEY-wLww-SzCgdXIvLTVkKI",
+                        "/entity/t218rckjby7?categoryId\u003dartist",
+                        3,null,null,null,null,null,null,null,null,null,null,null,[]
+                    ]
+                ],
+                54,
+                57
+            ]
+        ]
+
+]
+"""
