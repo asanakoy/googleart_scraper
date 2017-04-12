@@ -39,10 +39,17 @@ DOWNLOAD_DELAY = 3
 #TELNETCONSOLE_ENABLED = False
 
 # Override the default request headers:
-#DEFAULT_REQUEST_HEADERS = {
-#   'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-#   'Accept-Language': 'en',
-#}
+DEFAULT_REQUEST_HEADERS = {
+  # 'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+  'Accept-Language': 'en',
+  'User-Agent': 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:47.0) Gecko/20100101 Firefox/47.0'
+}
+
+SHOULD_LOGIN_GOOGLE = False
+GOOGLE_ACCOUNT = {
+    'email': 'myemail',  # change to your google mail account
+    'password': 'mypassword'  # set your password
+}
 
 # Enable or disable spider middlewares
 # See http://scrapy.readthedocs.org/en/latest/topics/spider-middleware.html
@@ -71,7 +78,9 @@ ITEM_PIPELINES = {
 MONGODB_SERVER = "localhost"
 MONGODB_PORT = 27017
 MONGODB_DB = "googleart"
-MONGODB_COLLECTION = "downloaded_images"
+MONGODB_COLLECTION_ARTWORKS = "artworks"
+MONGODB_COLLECTION_ARTISTS = "artists"
+IMAGES_DIR = "/export/home/asanakoy/workspace/googleart/images"
 
 # Enable and configure the AutoThrottle extension (disabled by default)
 # See http://doc.scrapy.org/en/latest/topics/autothrottle.html

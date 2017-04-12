@@ -1,4 +1,4 @@
-artist url: https://www.google.com/culturalinstitute/beta/entity/m02flcf?categoryId=artist
+artist url: https://www.google.com/culturalinstitute/beta/entity''02flcf?categoryId=artist
 ARTIST_ID=02flcf  - from artist url
 
 REQUEST_ID=1111 (any random 4 digits)
@@ -20,7 +20,7 @@ artist page SRC:
 15, - element ARRAY[0][0][3] = NEXT_IMAGE_IDX
 93,
 "Eg4KDAgBEggIABAOGgIQBA",  = NEXT_PAGE_ID
-0,
+0, = CUR_IMAGE_IDX
 [[[[[2,[1,0,2,4,3]
 
 
@@ -33,14 +33,14 @@ Do until {NEXT_IMAGE_IDX} != 0 or until NEXT_PAGE_ID is not null
 https://www.google.com/culturalinstitute/beta/api/entity/assets?entityId=%2Fm%2F02flcf&categoryId=artist&s=18&o=15&pt=Eg4KDAgBEggIABAOGgIQBA&hl=en&_reqid=103542&rt=j
 https://www.google.com/culturalinstitute/beta/api/entity/assets?entityId=%2Fm%2F02flcf&categoryId=artist&s=18&o=31&pt=Eg4KDAgBEggIABAeGgIQDA&hl=en&_reqid=203542&rt=j
 https://www.google.com/culturalinstitute/beta/api/entity/assets?entityId=%2Fm%2F02flcf&categoryId=artist&s=18&o=46&pt=Eg4KDAgBEggIABAtGgIQKA&hl=en&_reqid=303542&rt=j
-
+https://www.google.com/culturalinstitute/beta/api/entity/assets?entityId=%2Fg%2F120y83gd&categoryId=artist&s=18&o=33&pt=Eg4KDAgBEggIABAgGgIQQg&hl=de&_reqid=162640&rt=j
 
 ARTWORKS_LIST = ARAY[0][0][2]
 artwork = ARAY[0][0][2][i]
 artwork[0] = name (title)
 artwork[1] = artist name (can be with some extra info, like pupil, workshop, can be null)
 artwork[2] = image_url
-artwork[3] = IMAGE_PAGE_SUFFIX (for ex: /asset/a-moonlit-scene-with-a-winding-river/owEK-3qZNHUOGA )
+artwork[3] = ARTWORK_PAGE_SUFFIX (for ex: /asset/a-moonlit-scene-with-a-winding-river/owEK-3qZNHUOGA )
 
 
 IMAGE_PAGE_URL:

@@ -14,7 +14,7 @@ https://www.google.com/culturalinstitute/beta/api/objects/category?categoryId=ar
 1:["e", 2, null, null, 6514]
 
 https://www.google.com/culturalinstitute/beta/api/objects/category?categoryId=artist&s=30&tab=pop&o=174&hl=en&_reqid=508028&rt=j
-
+https://www.google.com/culturalinstitute/beta/api/objects/category?categoryId=artist&s=30&tab=pop&o=54&hl=de&_reqid=965&rt=j
 
 Array example:
 """

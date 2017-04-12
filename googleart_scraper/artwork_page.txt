@@ -16,13 +16,35 @@ Medium: Oil on poplar wood
 
 
 window.INIT_data = {};
-window.INIT_data['Asset:42516bd8-f9bf-42a6-afda-4a6d91a85725'] = ["stella.ap","Asset:42516bd8-f9bf-42a6-afda-4a6d91a85725",["2QHD3hLX2E0UDg","Madonna Terranuova","1505","//lh5.ggpht.com/JTAIVRcvmj0BrU0fR8lk8X9bj8hoErdlyx3k835utbZs87OOJyi2xGvWN1c",[null,"\u003cp\u003eThis picture was painted shortly after \u003ca href\u003d\"/culturalinstitute/beta/entity/m0c43g\" data-gacategory\u003d\"annotation\" data-gaaction\u003d\"clicked\" data-galabel\u003d\"assetpage_injected_link_v1\"\u003eRaphael\u003c/a\u003e’s arrival in Florence and “was his fi rst attempt at the tondo format that was so popular in that city. The Madonna’s face was much more confi - dently composed than in his three earlier Berlin \u003ca href\u003d\"/culturalinstitute/beta/entity/m05y4t\" data-gacategory\u003d\"annotation\" data-gaaction\u003d\"clicked\" data-galabel\u003d\"assetpage_injected_link_v1\"\u003epaintings\u003c/a\u003e. Leonardo’s infl uence is becoming stronger than Perugino’s. Details like the extreme foreshortening of Mary’s hand come from Leonardo, and possibly also the idea of showing the Christ Child with his legs crossed, although this pose could also derive from the Netherlands and a painter like Memling, for example, who is also echoed in the lavish attention paid to the landscape area. Northern aspects of the town featured more conspicuously in the under-drawing. A typically southern feature is the presence of holy children, above all the young John the Baptist.\u003c/p\u003e"]
+window.INIT_data['Asset:42516bd8-f9bf-42a6-afda-4a6d91a85725'] = ["stella.ap","Asset:42516bd8-f9bf-42a6-afda-4a6d91a85725",
+["2QHD3hLX2E0UDg",
+"Madonna Terranuova",
+"1505",
+"//lh5.ggpht.com/JTAIVRcvmj0BrU0fR8lk8X9bj8hoErdlyx3k835utbZs87OOJyi2xGvWN1c",
+[null,"\u003cp\u003eThis picture was painted shortly after
+\u003ca href\u003d\"/culturalinstitute/beta/entity/m0c43g\"
+data-gacategory\u003d\"annotation\" data-gaaction\u003d\"clicked\"
+data-galabel\u003d\"assetpage_injected_link_v1\"\u003eRaphael\u003c/a\u003e’s
+arrival in Florence and “was his fi rst attempt at the tondo format that was so popular
+ in that city. The Madonna’s face was much more confi - dently composed than in
+  his three earlier Berlin \u003ca href\u003d\"/culturalinstitute/beta/entity/m05y4t\"
+  data-gacategory\u003d\"annotation\" data-gaaction\u003d\"clicked\" data-galabel\u003d\"
+  assetpage_injected_link_v1\"\u003epaintings\u003c/a\u003e. Leonardo’s infl uence is becoming
+  stronger than Perugino’s. Details like the extreme foreshortening of Mary’s hand come from
+  Leonardo, and possibly also the idea of showing the Christ Child with his legs crossed,
+  although this pose could also derive from the Netherlands and a painter like Memling,
+  for example, who is also echoed in the lavish attention paid to the landscape area.
+  Northern aspects of the town featured more conspicuously in the under-drawing. A typically
+  southern feature is the presence of holy children, above all the young John the Baptist.
+  \u003c/p\u003e"]
 ,["Raphael"]
 ,["Gemäldegalerie, National Museums in Berlin",null,"//lh3.ggpht.com/x7Vg0cGJF2I_SY_FSQvWZAGRdycbiG4oY7fGELbsEVTmpg281k35d72xsbg","/partner/gemaldegalerie-staatliche-museen-zu-berlin",4,null,null,null,null,null,null,null,null,["//lh4.ggpht.com/_uLvOt7kusanJalzvGcIPvO4Z7Z-kEzTQRw5srzg8-bpQqUeMUWPgOTFyiI\u003dfautolight\u003d1:autobacklight\u003d1",[]
 ,"https://www.google.com/maps/dir//Matth%C3%A4ikirchplatz,+Kulturforum%0A10785+Berlin%0AGermany/data\u003d!4m8!4m7!1m0!1m5!1m1!1s0x47a851b415e47073:0x5855493b87994bad!2m2!1d13.366013599999999!2d52.5090131?hl\u003den\u0026gl\u003dUS"]
 ,null,null,[]
 ]
-,"//lh6.ggpht.com/C7TMPKj47woKbIMTpPdKiQH2LXJiEXyXNHLDagA2vshtUsc0H8pidQm--9IKb8bLkpggbQ","aTlZPyUyyD9WesxhlkX5sKZjxl4",0.99904853,1,[["Title",[["Madonna Terranuova","",[null,"Madonna Terranuova"]
+,"//lh6.ggpht.com/C7TMPKj47woKbIMTpPdKiQH2LXJiEXyXNHLDagA2vshtUsc0H8pidQm--9IKb8bLkpggbQ",
+"aTlZPyUyyD9WesxhlkX5sKZjxl4",0.99904853,1,
+[["Title",[["Madonna Terranuova","",[null,"Madonna Terranuova"]
 ]
 ]
 ]

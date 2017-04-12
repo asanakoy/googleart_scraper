@@ -10,7 +10,35 @@ from scrapy.item import Item, Field
 
 
 class ArtworkItem(Item):
-    artist_name = Field()
-    name = Field()
-    url = Field()
+    title = Field()
+    title_original = Field()
+    artist_id = Field()
+    artist_slug = Field()
+    artist_name_extra = Field()  # can be with some extra info, like pupil, workshop, can be null
+    page_url = Field()
+    image_url = Field()
+    artwork_slug = Field()
+    image_id = Field()
+    date = Field() # may be "undated"
+    location_created = Field()
+    subject = Field()
+    dimensions = Field()
+    type = Field()
+    medium = Field()
+    classification = Field()
+    school = Field()
+    nationality = Field()
+    artist_details = Field()
+    style = Field()
+    object_type = Field()  # drawing
+    other = Field()
+    theme = Field()
 
+
+class ArtistItem(Item):
+    name = Field()
+    artist_id = Field()
+    page_url = Field()
+    bio = Field()
+    wiki_url = Field()
+    years_of_life = Field()

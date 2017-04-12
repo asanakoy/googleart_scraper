@@ -1,7 +1,6 @@
 import re
-import six
+import logging
 from six.moves.urllib.parse import urlparse, urljoin
-import json
 import lxml.etree as etree
 
 from scrapy.link import Link
@@ -10,7 +9,7 @@ import scrapy.linkextractors.lxmlhtml
 from scrapy.utils.response import get_base_url
 from scrapy.utils.python import unique as unique_list, to_native_str
 from scrapy.utils.misc import arg_to_iter
-
+from scrapy.shell import inspect_response
 
 _collect_string_content = etree.XPath("string()")
 _re_type = type(re.compile("", 0))
@@ -30,19 +29,23 @@ class ParserLinkExtractor(scrapy.linkextractors.lxmlhtml.LxmlParserLinkExtractor
 
     def _iter_links(self, document):
         scripts = document.xpath('//script[@type="text/javascript"]/text()').extract()
+        if not scripts:
+            logging.warning('Scripts not found!')
         array_text = None
         for script in scripts:
             if script.startswith('window.INIT_data'):
-                array_text = script.replace(u'\\u003d', u'=')
                 # TODO: evaluate javascript properly
+                array_text = script.replace(u'\\u003d', u'=')
                 break
         if array_text is None:
+            print scripts
+            logging.warning('Links not found!')
             return []
         else:
             all_urls = []
             for regexp in self.url_regexps:
                 all_urls.extend(re.findall(regexp, array_text))
-            print all_urls[:10]
+            print 'URLs:', all_urls[:10]
             return all_urls
 
     def _extract_links(self, selector, response_url, response_encoding, base_url):
@@ -82,6 +85,10 @@ class GoogleApiLinkExtractor(scrapy.linkextractors.FilteringLinkExtractor):
         self.base_url = base_url
 
     def extract_links(self, response):
+        # TODO: remove debug code
+        with open('/export/home/asanakoy/tmp/response.txt', 'w') as f:
+            f.write(response.body)
+        assert False, 'enough ;)'
         base_url = self.base_url if self.base_url else get_base_url(response)
         if self.restrict_xpaths:
             docs = [subdoc
@@ -92,7 +99,7 @@ class GoogleApiLinkExtractor(scrapy.linkextractors.FilteringLinkExtractor):
         all_links = []
         for doc in docs:
             links = self._extract_links(doc, response.url, response.encoding, base_url)
-            print 'Num links:', len(links)
+            print 'Num links before filter:', len(links)
             all_links.extend(self._process_links(links))
         print 'Num links:', len(all_links)
         return unique_list(all_links)
