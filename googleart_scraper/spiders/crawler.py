@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+import os
 from os.path import join
 import re
 import random
@@ -12,6 +13,7 @@ from scrapy.shell import inspect_response
 
 from googleart_scraper.items import ArtistItem
 from googleart_scraper.items import ArtworkItem
+from googleart_scraper.items import VisitedUrlItem
 from googleart_scraper import settings
 
 
@@ -20,35 +22,45 @@ class GoogleartCrawlSpider(CrawlSpider):
     BASE_URL = u'https://www.google.com/culturalinstitute/beta/'
     LOGIN_PAGE = u'https://accounts.google.com/ServiceLogin?service=cultural'
     assert BASE_URL[-1] == '/'
-    allowed_domains = ['google.com']
-    NUM_ARTISTS_TO_GET = 2000
+    # allowed_domains = ['google.com']
+    NUM_ARTISTS_TO_GET = 6000
     START_URLS = [('https://www.google.com/culturalinstitute/beta/u/0/api/objects/'
                    'category?categoryId=artist&s={}&tab=pop&o=0&hl=en&_reqid=508028&rt=j')
         .format(NUM_ARTISTS_TO_GET)]
 
     artist_id_reg = re.compile(r'entity/([a-zA-Z].+?)(?:[?/]|$)')
+    is_logged_in = False
+    is_logging_in_started = False
 
     def start_requests(self):
+        self.logger.debug('===start_requests===')
         if settings.SHOULD_LOGIN_GOOGLE:
-            yield Request(url=self.LOGIN_PAGE, callback=self.login_email, dont_filter=True)
+            yield self.login()
         else:
             for url in self.START_URLS:
                 yield Request(url, callback=self.parse_artists_json, dont_filter=True)
 
+    def login(self):
+        self.is_logging_in_started = True
+        return Request(url=self.LOGIN_PAGE, callback=self.login_email,
+                      dont_filter=True, priority=9999)
+
     def login_email(self, response):
+        self.logger.debug('===login_email===')
         return FormRequest.from_response(response,
                                           formdata={'Email': settings.GOOGLE_ACCOUNT['email']},
-                                          callback=self.login_password, dont_filter=True)
+                                          callback=self.login_password, dont_filter=True,
+                                          priority=9999)
 
     def login_password(self, response):
-        self.logger.debug("Now we enter password")
+        self.logger.debug('===login_password===')
         self.logger.debug('Email: %s', response.xpath('//*[@id="email-display"]').extract())
         self.logger.debug('Error msg: %s',
                           response.xpath('//*[@role="alert" or @class="error-msg"]/text()').extract())
         return [FormRequest.from_response(response,
                                           formdata={'Passwd': settings.GOOGLE_ACCOUNT['password']},
                                           callback=self.after_login,
-                                          dont_filter=True)]
+                                          dont_filter=True, priority=9999)]
 
     def after_login(self, response):
         email_tag = response.xpath('//*[@id="email-display"]').extract()
@@ -61,13 +73,17 @@ class GoogleartCrawlSpider(CrawlSpider):
             or 'Wrong password' in response.body
             or 'Das Passwort ist falsch' in response.body):
             self.logger.error("Login failed")
+            self.is_logging_in_started = False
             return
         else:
             print("Login Successful!!")
+            self.is_logging_in_started = False
+            self.is_logged_in = True
             for url in self.START_URLS:
                 yield Request(url, callback=self.parse_artists_json, dont_filter=True)
 
     def parse_artists_json(self, response):
+
         body = response.body.decode('utf-8').strip()
         if body.startswith(')]}\''):
             body = body[4:]
@@ -102,11 +118,18 @@ class GoogleartCrawlSpider(CrawlSpider):
             not artwork_item['image_url'].startswith('https://')):
             artwork_item['image_url'] = 'https://' + artwork_item['image_url']
         artwork_item['page_url'] = GoogleartCrawlSpider.BASE_URL + artwork_obj[3].strip('/')
-        artwork_item['artwork_slug'] = artwork_obj[3].strip('/').split('/')[-2]
+        page_url_parts = artwork_obj[3].strip('/').split('/')
+        if page_url_parts[-2] == 'asset':
+            artwork_item['artwork_slug'] = page_url_parts[-1]
+        else:
+            artwork_item['artwork_slug'] = '_'.join(page_url_parts[-2:])
         artwork_item['image_id'] = artist_slug + '_' + artwork_item['artwork_slug']
         return artwork_item
 
     def parse_artist(self, response):
+        # if settings.SHOULD_LOGIN_GOOGLE and not self.is_logged_in and not self.is_logging_in_started:
+        #     yield self.login()
+
         artist_id = re.findall(self.artist_id_reg, response.url)[0]
         request_id = '{:04d}'.format(random.randint(0, 9999))
         # TODO:
@@ -142,7 +165,7 @@ class GoogleartCrawlSpider(CrawlSpider):
             yield artwork_item
             yield Request(artwork_item['image_url'],
                           callback=self.parse_image,
-                          meta={'image_id': artwork_item['image_id']})
+                          meta={'image_id': artwork_item['image_id']}, priority=10)
             yield Request(artwork_item['page_url'], callback=self.parse_artwork,
                           meta={'image_id': artwork_item['image_id']})
 
@@ -155,6 +178,9 @@ class GoogleartCrawlSpider(CrawlSpider):
                             'artist_slug': artist_slug})
 
     def parse_artworks_page_json(self, response):
+        # if settings.SHOULD_LOGIN_GOOGLE and not self.is_logged_in and not self.is_logging_in_started:
+        #     yield self.login()
+
         """ Parse a json with containing a list of artworks of the current page """
         body = response.body.decode('utf-8').strip()
         if body.startswith(')]}\''):
@@ -181,6 +207,9 @@ class GoogleartCrawlSpider(CrawlSpider):
         yield Request(next_page_url, self.parse_artworks_page_json, meta=response.meta)
 
     def parse_artwork(self, response):
+        # if settings.SHOULD_LOGIN_GOOGLE and not self.is_logged_in and not self.is_logging_in_started:
+        #     yield self.login()
+
         script_str = response.xpath('//script[@type="text/javascript"]/text()').extract()[1]
         assert script_str.startswith('window.INIT_data'), \
             'Found the wrong script: {}'.format(script_str[:40])
@@ -210,24 +239,32 @@ class GoogleartCrawlSpider(CrawlSpider):
             ('subject'): ['subject', 'list'],
             ('abmessungen', 'physical dimensions', 'dimensions'): 'dimensions',
             ('typ', 'type'): ['type', 'list'],
-            ('material', 'medium', 'support', 'media',
+            ('material', 'medium', 'support', 'media', 'materials_&_techniques'
              'teknik', 'technik und material'): ['medium', 'list'],
-            ('classification'): 'classification',
+            ('classification', 'object_classification'): 'classification',
             ('artist school', 'school'): 'school',
             ('artist nationality', 'work nationality'): 'nationality',
             ('artist details'): 'artist_details',
             ('stil', 'style'): ['style', 'list'],
             ('object type'): ['object_type', 'list'],
+            ('keywords', 'tags'): ['keywords', 'list'],
+            ('curatorial_area'): ['curratorial_area', 'list'],
+            ('chronology'): 'chronology',
         }
 
         props_to_skip = ['rechte', 'provenienz', 'herkunft', u'künstler-informationen',
-                         'rxterner link', 'rights', 'artist information', 'provenance',
+                         'externer link', 'rights', 'artist information', 'provenance',
                          'external link', 'title', 'further_information', 'acquisition_method',
                          'date', 'artist', 'inscriptions', 'null', 'title', 'inventory_number',
                          'artist_biography', 'creator', 'terms_of_use', 'location',
                          'artist/maker', 'title_in_swedish', 'credit_line', 'exhibition',
                          'curator', 'proveniens', 'dansk_link', 'dansk_titel', 'work_notes',
-                         'attributed_to', 'title_in_swedish', 'signature']
+                         'attributed_to', 'title_in_swedish', 'signature', 'periodic_title',
+                         'full_title', 'credit_line', 'artwork_accession_number',
+                         'object_credit_line', 'bibliography', 'creator', 'external_link'
+                         ]
+        words_to_skip = ['signature', 'inscription', 'accession', 'credit',
+                          'exhibition', 'title', 'rights', 'terms', 'museum', 'inventory']
 
         for cur_property in artwork_description:
             cur_property[0] = cur_property[0].lower()
@@ -239,19 +276,31 @@ class GoogleartCrawlSpider(CrawlSpider):
                         if method == 'list':
                             artwork_item[field_name] = get_list_property(cur_property,
                                                        append=artwork_item.get(field_name, []))
+                        else:
+                            raise ValueError('Unknown method: {}'.format(method))
                     else:
                         field_name = val
                         artwork_item[field_name] = cur_property[1][0][0]
                     stored = True
                     break
-            if not stored and cur_property[0] not in props_to_skip:
-                prop_name = cur_property[0].replace(' ', '_')
-                artwork_item['other'][prop_name] = get_list_property(cur_property)
+            if not stored:
+                should_skip = False
+                for skip_word in words_to_skip:
+                    if skip_word in cur_property[0]:
+                        should_skip = True
+                        break
+                should_skip |= cur_property[0] not in props_to_skip
+                if not should_skip:
+                    prop_name = cur_property[0].replace(' ', '_')
+                    artwork_item['other'][prop_name] = get_list_property(cur_property)
         yield artwork_item
+        yield VisitedUrlItem(url=response.url)
 
     def parse_image(self, response):
         """ Save image to disk """
         image_path = join(settings.IMAGES_DIR, response.meta['image_id'] + '.jpg')
-        with open(image_path, 'wb') as f:
-            f.write(response.body)
-            self.logger.info('Downloaded image %s', image_path)
+        if not os.path.exists(image_path):
+            with open(image_path, 'wb') as f:
+                f.write(response.body)
+                self.logger.info('Downloaded image %s', image_path)
+            return VisitedUrlItem(url=response.url)

@@ -33,6 +33,9 @@ class ArtworkItem(Item):
     object_type = Field()  # drawing
     other = Field()
     theme = Field()
+    keywords = Field()
+    curratorial_area = Field()  # [u'prints and drawings']
+    chronology = Field()  # '1801-1850'
 
 
 class ArtistItem(Item):
@@ -42,3 +45,8 @@ class ArtistItem(Item):
     bio = Field()
     wiki_url = Field()
     years_of_life = Field()
+
+
+class VisitedUrlItem(Item):
+    url = Field()
+    hash = Field()

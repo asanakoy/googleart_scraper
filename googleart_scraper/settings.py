@@ -80,6 +80,8 @@ MONGODB_PORT = 27017
 MONGODB_DB = "googleart"
 MONGODB_COLLECTION_ARTWORKS = "artworks"
 MONGODB_COLLECTION_ARTISTS = "artists"
+MONGODB_VISITED_URLS = "visited_urls"
+
 IMAGES_DIR = "/export/home/asanakoy/workspace/googleart/images"
 
 # Enable and configure the AutoThrottle extension (disabled by default)
@@ -102,3 +104,9 @@ IMAGES_DIR = "/export/home/asanakoy/workspace/googleart/images"
 #HTTPCACHE_DIR = 'httpcache'
 #HTTPCACHE_IGNORE_HTTP_CODES = []
 #HTTPCACHE_STORAGE = 'scrapy.extensions.httpcache.FilesystemCacheStorage'
+
+DEPTH_PRIORITY = -1
+
+DUPEFILTER_CLASS = 'googleart_scraper.dupefilters.DupeFilter'
+# Log if duplicates were filtered
+DUPEFILTER_DEBUG = True
