@@ -24,6 +24,25 @@ The crawler does:
 All the collected data is stored in [MongoDb](https://docs.mongodb.com/manual/installation/).  
 Images are stored on disk.
 
+One entry in database for an artwork looks like (some artworks cane have more fields):
+
+
+    {
+       "image_id" : "oz_mural-millerntor-gallery_kAFxJz3YnrJ4rw",
+       "artist_name_extra" : "OZ",
+       "title" : "Mural MILLERNTOR GALLERY",
+       "artwork_slug" : "mural-millerntor-gallery_kAFxJz3YnrJ4rw",
+       "image_url" : "https://lh5.ggpht.com/OT7x4vhUw28Nb7mtvO8h017Pgn-S0B-x2Q9Dej9p8I0SdD-U46UrODnMsRZQJw",
+       "page_url" : "https://www.google.com/culturalinstitute/beta/asset/mural-millerntor-gallery/kAFxJz3YnrJ4rw",
+       "artist_slug" : "oz",
+       "artist_id" : "t2194x6zy1b",
+       "dimensions" : "spray paint on wall, ca. 6.0 x 3.0m",
+       "location_created" : "St. Pauli, Hamburg, Germany",
+       "title_original" : "Mural MILLERNTOR GALLERY",
+       "date" : "2012-09"
+    }
+
+
 ### Dependencies
 - [MongoDb 3.4](https://docs.mongodb.com/manual/installation/)
 - Python 2.7
