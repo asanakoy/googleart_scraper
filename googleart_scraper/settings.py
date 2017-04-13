@@ -108,5 +108,11 @@ IMAGES_DIR = "/export/home/asanakoy/workspace/googleart/images"
 DEPTH_PRIORITY = -1
 
 DUPEFILTER_CLASS = 'googleart_scraper.dupefilters.DupeFilter'
+# How often to sync a set of visited links with database (in sec).
+# Visited links are only pulled from db, not pushed.
+# Set to None if you don't want to synchronise at all.
+# Useful if you run several instances of crawler at the same time.
+# It decreases the number of duplicate links crawled by different instances.
+DUPEFILTER_SYNC_EVERY = None  # 1800
 # Log if duplicates were filtered
 DUPEFILTER_DEBUG = True

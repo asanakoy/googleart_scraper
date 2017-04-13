@@ -40,12 +40,11 @@ class DupeFilter(RFPDupeFilter):
     Class for filtering duplicate links.
     Uses database to retrieve visited links of previous / parallel runs.
     """
-    def __init__(self, settings, debug=False, sync_every=3600):
+    def __init__(self, settings, debug=False):
         """
         Args:
             settings: scrapper settings
             debug: is debug?
-            sync_every: how often to sync visited links with database. In seconds.
         """
         self.file = None
         self.fingerprints = set()
@@ -53,7 +52,7 @@ class DupeFilter(RFPDupeFilter):
         self.debug = debug
         self.logger = logging.getLogger(__name__)
         self.settings = settings
-        self.sync_every = sync_every
+        self.sync_every = self.settings['DUPEFILTER_SYNC_EVERY']
 
         connection = pymongo.MongoClient(
             self.settings['MONGODB_SERVER'],
@@ -64,12 +63,19 @@ class DupeFilter(RFPDupeFilter):
         self.sync_with_database()
 
     def sync_with_database(self):
+        """
+        Sync a set of visited links with database.
+        Visited links are only pulled from db, not pushed.
+        Can be repeated every sync_every sec if sync_every is not None and not 0.
+        """
         visited_urls = self.db[self.settings['MONGODB_VISITED_URLS']]
         visited_url_hashes = set([x['hash'] for x in visited_urls.find(projection=['hash'])])
         self.fingerprints = self.fingerprints.union(visited_url_hashes)
         logging.info('Visited links synced with database: %d visited urls', len(self.fingerprints))
         if self.sync_every:
-            threading.Timer(self.sync_every, self.sync_with_database).start()
+            timer_thread = threading.Timer(self.sync_every, self.sync_with_database)
+            timer_thread.daemon = True
+            timer_thread.start()
 
     @classmethod
     def from_settings(cls, settings):
