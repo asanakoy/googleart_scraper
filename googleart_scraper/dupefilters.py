@@ -1,5 +1,6 @@
 import os
 import logging
+import threading
 
 import pymongo
 
@@ -35,22 +36,40 @@ def url_hash(url):
 
 
 class DupeFilter(RFPDupeFilter):
-    def __init__(self, settings, debug=False):
+    """
+    Class for filtering duplicate links.
+    Uses database to retrieve visited links of previous / parallel runs.
+    """
+    def __init__(self, settings, debug=False, sync_every=3600):
+        """
+        Args:
+            settings: scrapper settings
+            debug: is debug?
+            sync_every: how often to sync visited links with database. In seconds.
+        """
         self.file = None
         self.fingerprints = set()
         self.logdupes = True
         self.debug = debug
         self.logger = logging.getLogger(__name__)
+        self.settings = settings
+        self.sync_every = sync_every
 
         connection = pymongo.MongoClient(
-            settings['MONGODB_SERVER'],
-            settings['MONGODB_PORT']
+            self.settings['MONGODB_SERVER'],
+            self.settings['MONGODB_PORT']
         )
-        db = connection[settings['MONGODB_DB']]
-        visited_urls = db[settings['MONGODB_VISITED_URLS']]
-        self.fingerprints = set([x['hash'] for x in visited_urls.find(projection=['hash'])])
-        logging.info('DupeFilter: %d visited urls', len(self.fingerprints))
-        connection.close()
+        self.db = connection[self.settings['MONGODB_DB']]
+        self.fingerprints = set()
+        self.sync_with_database()
+
+    def sync_with_database(self):
+        visited_urls = self.db[self.settings['MONGODB_VISITED_URLS']]
+        visited_url_hashes = set([x['hash'] for x in visited_urls.find(projection=['hash'])])
+        self.fingerprints = self.fingerprints.union(visited_url_hashes)
+        logging.info('Visited links synced with database: %d visited urls', len(self.fingerprints))
+        if self.sync_every:
+            threading.Timer(self.sync_every, self.sync_with_database).start()
 
     @classmethod
     def from_settings(cls, settings):
