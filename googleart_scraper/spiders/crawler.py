@@ -29,8 +29,6 @@ class GoogleartCrawlSpider(CrawlSpider):
         .format(NUM_ARTISTS_TO_GET)]
 
     artist_id_reg = re.compile(r'entity/([a-zA-Z].+?)(?:[?/]|$)')
-    is_logged_in = False
-    is_logging_in_started = False
 
     def start_requests(self):
         self.logger.debug('===start_requests===')
@@ -41,7 +39,6 @@ class GoogleartCrawlSpider(CrawlSpider):
                 yield Request(url, callback=self.parse_artists_json, dont_filter=True)
 
     def login(self):
-        self.is_logging_in_started = True
         return Request(url=self.LOGIN_PAGE, callback=self.login_email,
                       dont_filter=True, priority=9999)
 
@@ -73,12 +70,9 @@ class GoogleartCrawlSpider(CrawlSpider):
             or 'Wrong password' in response.body
             or 'Das Passwort ist falsch' in response.body):
             self.logger.error("Login failed")
-            self.is_logging_in_started = False
             return
         else:
             print("Login Successful!!")
-            self.is_logging_in_started = False
-            self.is_logged_in = True
             for url in self.START_URLS:
                 yield Request(url, callback=self.parse_artists_json, dont_filter=True)
 
@@ -127,9 +121,6 @@ class GoogleartCrawlSpider(CrawlSpider):
         return artwork_item
 
     def parse_artist(self, response):
-        # if settings.SHOULD_LOGIN_GOOGLE and not self.is_logged_in and not self.is_logging_in_started:
-        #     yield self.login()
-
         artist_id = re.findall(self.artist_id_reg, response.url)[0]
         request_id = '{:04d}'.format(random.randint(0, 9999))
         # TODO:
@@ -178,9 +169,6 @@ class GoogleartCrawlSpider(CrawlSpider):
                             'artist_slug': artist_slug})
 
     def parse_artworks_page_json(self, response):
-        # if settings.SHOULD_LOGIN_GOOGLE and not self.is_logged_in and not self.is_logging_in_started:
-        #     yield self.login()
-
         """ Parse a json with containing a list of artworks of the current page """
         body = response.body.decode('utf-8').strip()
         if body.startswith(')]}\''):
@@ -207,9 +195,6 @@ class GoogleartCrawlSpider(CrawlSpider):
         yield Request(next_page_url, self.parse_artworks_page_json, meta=response.meta)
 
     def parse_artwork(self, response):
-        # if settings.SHOULD_LOGIN_GOOGLE and not self.is_logged_in and not self.is_logging_in_started:
-        #     yield self.login()
-
         script_str = response.xpath('//script[@type="text/javascript"]/text()').extract()[1]
         assert script_str.startswith('window.INIT_data'), \
             'Found the wrong script: {}'.format(script_str[:40])
@@ -233,7 +218,7 @@ class GoogleartCrawlSpider(CrawlSpider):
 
         prop_map = {
             ('theme'): 'theme',
-            ('datierung', 'date created', 'datum'): 'date',
+            ('datierung', 'date created', 'datum', 'date'): 'date_extra',
             ('original_title'): 'title_original',
             ('entstehungsort', 'location created'): 'location_created',
             ('subject'): ['subject', 'list'],
@@ -289,7 +274,7 @@ class GoogleartCrawlSpider(CrawlSpider):
                     if skip_word in cur_property[0]:
                         should_skip = True
                         break
-                should_skip |= cur_property[0] not in props_to_skip
+                should_skip |= cur_property[0] in props_to_skip
                 if not should_skip:
                     prop_name = cur_property[0].replace(' ', '_')
                     artwork_item['other'][prop_name] = get_list_property(cur_property)

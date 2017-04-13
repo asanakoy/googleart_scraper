@@ -19,7 +19,8 @@ class ArtworkItem(Item):
     image_url = Field()
     artwork_slug = Field()
     image_id = Field()
-    date = Field() # may be "undated"
+    date = Field()  # may be "undated"
+    date_extra = Field()
     location_created = Field()
     subject = Field()
     dimensions = Field()
