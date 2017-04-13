@@ -3,6 +3,15 @@ This is a scrapy crawler for [Google art](https://www.google.com/culturalinstitu
 Use it at your own risk to be banned by google.  
 Scrape politely.
 
+
+<img src="https://lh6.ggpht.com/lKBIJTbW-2EqpF6plsFdNzx1YXyP-5UyF3ug3fPhft2BZYshbva9Klrvp4L0LRg" alt="van Gogh,
+   Self-Portrait" title="van Gogh, 
+   Self-Portrait" height="347" /> <img src="https://lh6.ggpht.com/KS0tpjUXsHhaL-v_-10dDtQ0RXH81FhRAPxyHgKE-E2jhoM2km_w8g" alt="van Gogh,
+   Portrait of Joseph Roulin" title="van Gogh, 
+   Portrait of Joseph Roulin" height="347" />
+   
+   
+
 ### Description
 The crawler does:
 1. Parses [list of artists page](https://www.google.com/culturalinstitute/beta/u/0/category/artist).
@@ -25,5 +34,5 @@ Images are stored on disk.
 TODO:
 
 ### Usage
-`scrapy crawl googleart`
+`:~$ scrapy crawl googleart`
 
