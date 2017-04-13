@@ -105,6 +105,7 @@ AUTOTHROTTLE_DEBUG = True
 #HTTPCACHE_IGNORE_HTTP_CODES = []
 #HTTPCACHE_STORAGE = 'scrapy.extensions.httpcache.FilesystemCacheStorage'
 
+# Use DFS order
 DEPTH_PRIORITY = -1
 
 DUPEFILTER_CLASS = 'googleart_scraper.dupefilters.DupeFilter'
