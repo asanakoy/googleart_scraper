@@ -1,20 +1,25 @@
 # -*- coding: utf-8 -*-
 
+from collections import defaultdict
 import os
 from os.path import join
-import re
 import random
+import re
 
 import js2py
+import pandas as pd
+import pymongo
 from scrapy.spiders import CrawlSpider
 from scrapy import Request
 from scrapy import FormRequest
 from scrapy.shell import inspect_response
+from tqdm import tqdm
 
 from googleart_scraper.items import ArtistItem
 from googleart_scraper.items import ArtworkItem
 from googleart_scraper.items import VisitedUrlItem
 from googleart_scraper import settings
+import googleart_scraper.spiders.data_utils as data_utils
 
 
 class GoogleartCrawlSpider(CrawlSpider):
@@ -23,12 +28,63 @@ class GoogleartCrawlSpider(CrawlSpider):
     LOGIN_PAGE = u'https://accounts.google.com/ServiceLogin?service=cultural'
     assert BASE_URL[-1] == '/'
     # allowed_domains = ['google.com']
+    START_ARTIST = 0
     NUM_ARTISTS_TO_GET = 6000
     START_URLS = [('https://www.google.com/culturalinstitute/beta/u/0/api/objects/'
-                   'category?categoryId=artist&s={}&tab=pop&o=0&hl=en&_reqid=508028&rt=j')
-        .format(NUM_ARTISTS_TO_GET)]
+                   'category?categoryId=artist&s={}&tab=pop&o={}&hl=en&_reqid=508028&rt=j')
+        .format(NUM_ARTISTS_TO_GET, START_ARTIST)]
 
     artist_id_reg = re.compile(r'entity/([a-zA-Z].+?)(?:[?/]|$)')
+
+    def __init__(self, *a, **kw):
+        super(GoogleartCrawlSpider, self).__init__(*a, **kw)
+        self.in_db_artists_df = None
+
+    @classmethod
+    def from_crawler(cls, crawler, *args, **kwargs):
+        spider = super(GoogleartCrawlSpider, cls).from_crawler(crawler, *args, **kwargs)
+        spider.init_data()
+        return spider
+
+    def init_data(self):
+        connection = pymongo.MongoClient(
+            self.settings['MONGODB_SERVER'],
+            self.settings['MONGODB_PORT']
+        )
+
+        db = connection[self.settings['MONGODB_DB']]
+        all_artists = list(db[self.settings['MONGODB_COLLECTION_ARTISTS']].find())
+        all_artworks = list(db[self.settings['MONGODB_COLLECTION_ARTWORKS']].find())
+        connection.close()
+
+        self.in_db_artists_df = pd.DataFrame(all_artists)
+        if all_artists:
+            self.in_db_artists_df.index = self.in_db_artists_df['artist_id']
+            del self.in_db_artists_df['artist_id']
+
+        if all_artworks and all_artists:
+            works_count = self.count_artworks_per_artist(all_artists, all_artworks)
+            self.in_db_artists_df['items_count'] = 0
+            self.in_db_artists_df.loc[works_count.keys(), 'items_count'] = works_count.values()
+
+    @staticmethod
+    def count_artworks_per_artist(artists, all_artworks):
+        """ Build a dict D: D[artist_id] = number_of_artworks of the corresp. artist """
+        works_count = defaultdict(int)
+        artworks_df = pd.DataFrame(all_artworks)
+        artist_slug_vc = artworks_df['artist_slug'].value_counts()
+        artist_id_vc = artworks_df['artist_id'].value_counts()
+
+        for artist in tqdm(artists, desc='count works per artist'):
+            artist_slug = artist['name'].lower().replace(' ', '-')
+            artist_id = artist['artist_id']
+            count = 0
+            if artist_slug in artist_slug_vc:
+                count = max(count, artist_slug_vc[artist_slug])
+            if artist_id in artist_id_vc:
+                count = max(count, artist_id_vc[artist_id])
+            works_count[artist_id] = count
+        return works_count
 
     def start_requests(self):
         self.logger.debug('===start_requests===')
@@ -76,6 +132,10 @@ class GoogleartCrawlSpider(CrawlSpider):
             for url in self.START_URLS:
                 yield Request(url, callback=self.parse_artists_json, dont_filter=True)
 
+    @staticmethod
+    def artist_id_from_page_url(url):
+        return re.findall(GoogleartCrawlSpider.artist_id_reg, url)[0]
+
     def parse_artists_json(self, response):
 
         body = response.body.decode('utf-8').strip()
@@ -86,7 +146,32 @@ class GoogleartCrawlSpider(CrawlSpider):
 
         for artist_obj in artists_array:
             url = GoogleartCrawlSpider.BASE_URL + artist_obj[3].strip('/')
-            yield Request(url, callback=self.parse_artist)
+            try:
+                total_items_count = int(artist_obj[1].strip().split(' ')[0].replace(',', ''))
+            except:
+                total_items_count = None
+            artist_id = self.artist_id_from_page_url(url)
+
+            should_skip_artist = False
+            if artist_id in self.in_db_artists_df.index:
+                artist_in_db = self.in_db_artists_df.loc[artist_id].to_dict()
+                if not data_utils.is_valid_artist(artist_in_db):
+                    should_skip_artist = True
+                elif total_items_count > artist_in_db['total_items_count']:
+                    # Website already has more items than before. Need to check.
+                    should_skip_artist = False
+                elif total_items_count is not None:
+                    should_skip_artist = artist_in_db['items_count'] == total_items_count
+                    if artist_in_db['items_count'] > total_items_count:
+                        self.logger.error('works_count for {} ({}) > defined on page({})'
+                                          .format(artist_id, artist_in_db['items_count'],
+                                                  total_items_count))
+            if not should_skip_artist:
+                yield Request(url, callback=self.parse_artist,
+                              meta={'total_items_count': total_items_count})
+            else:
+                self.logger.info('Skipping Already scraped artist {}'.format(artist_id))
+        self.logger.info('YAAAAHOOOOO! All artists parsed!')
 
     @staticmethod
     def get_next_images_page_url(artist_id, next_image_idx, next_page_id, request_id):
@@ -95,7 +180,7 @@ class GoogleartCrawlSpider(CrawlSpider):
         artist_id_suf = artist_id[1:]
         return GoogleartCrawlSpider.BASE_URL + \
                (u'api/entity/assets?entityId=%2F{artist_id_pref}%2F{artist_id_suf}'
-                u'&categoryId=artist&s=18&o={next_image_idx}&'
+                u'&categoryId=artist&s=1000&o={next_image_idx}&'
                 u'pt={next_page_id}&hl=en&_reqid={request_id}&rt=j'
                 .format(artist_id_pref=artist_id_pref, artist_id_suf=artist_id_suf,
                         next_image_idx=next_image_idx,
@@ -121,7 +206,7 @@ class GoogleartCrawlSpider(CrawlSpider):
         return artwork_item
 
     def parse_artist(self, response):
-        artist_id = re.findall(self.artist_id_reg, response.url)[0]
+        artist_id = self.artist_id_from_page_url(response.url)
         request_id = '{:04d}'.format(random.randint(0, 9999))
         # TODO:
         name = response.xpath('//*[@id="yDmH0d"]/div[3]/header/div[2]/h1/text()').extract_first()
@@ -147,26 +232,29 @@ class GoogleartCrawlSpider(CrawlSpider):
         artist_item['bio'] = bio
         artist_item['page_url'] = response.url
         artist_item['wiki_url'] = wiki_url
+        if response.meta['total_items_count'] is not None:
+            artist_item['total_items_count'] = response.meta['total_items_count']
         yield artist_item
         # inspect_response(response, self)
+        if data_utils.is_valid_artist(artist_item):
+            for artwork_obj in artworks_array:
+                artwork_item = self.build_artwork_item(artwork_obj, artist_slug)
+                artwork_item['artist_id'] = artist_id
+                yield artwork_item
+                yield Request(artwork_item['image_url'],
+                              callback=self.parse_image,
+                              meta={'image_id': artwork_item['image_id']}, priority=10)
+                yield Request(artwork_item['page_url'], callback=self.parse_artwork,
+                              meta={'image_id': artwork_item['image_id']})
 
-        for artwork_obj in artworks_array:
-            artwork_item = self.build_artwork_item(artwork_obj, artist_slug)
-            artwork_item['artist_id'] = artist_id
-            yield artwork_item
-            yield Request(artwork_item['image_url'],
-                          callback=self.parse_image,
-                          meta={'image_id': artwork_item['image_id']}, priority=10)
-            yield Request(artwork_item['page_url'], callback=self.parse_artwork,
-                          meta={'image_id': artwork_item['image_id']})
-
-        next_page_url = self.get_next_images_page_url(artist_id=artist_id,
-                                                      next_image_idx=next_image_idx,
-                                                      next_page_id=next_page_id,
-                                                      request_id=request_id)
-        yield Request(next_page_url, self.parse_artworks_page_json,
-                      meta={'artist_id': artist_id,
-                            'artist_slug': artist_slug})
+            if next_image_idx:
+                next_page_url = self.get_next_images_page_url(artist_id=artist_id,
+                                                              next_image_idx=next_image_idx,
+                                                              next_page_id=next_page_id,
+                                                              request_id=request_id)
+                yield Request(next_page_url, self.parse_artworks_page_json,
+                              meta={'artist_id': artist_id,
+                                    'artist_slug': artist_slug})
 
     def parse_artworks_page_json(self, response):
         """ Parse a json with containing a list of artworks of the current page """
@@ -188,11 +276,12 @@ class GoogleartCrawlSpider(CrawlSpider):
             yield Request(artwork_item['page_url'], callback=self.parse_artwork,
                           meta={'image_id': artwork_item['image_id']})
 
-        next_page_url = self.get_next_images_page_url(artist_id=response.meta['artist_id'],
-                                                      next_image_idx=next_image_idx,
-                                                      next_page_id=next_page_id,
-                                                      request_id=request_id)
-        yield Request(next_page_url, self.parse_artworks_page_json, meta=response.meta)
+        if next_image_idx:
+            next_page_url = self.get_next_images_page_url(artist_id=response.meta['artist_id'],
+                                                          next_image_idx=next_image_idx,
+                                                          next_page_id=next_page_id,
+                                                          request_id=request_id)
+            yield Request(next_page_url, self.parse_artworks_page_json, meta=response.meta)
 
     def parse_artwork(self, response):
         script_str = response.xpath('//script[@type="text/javascript"]/text()').extract()[1]
@@ -237,11 +326,11 @@ class GoogleartCrawlSpider(CrawlSpider):
             ('chronology'): 'chronology',
         }
 
-        props_to_skip = ['rechte', 'provenienz', 'herkunft', u'künstler-informationen',
+        props_to_skip = ['rechte', 'provenienz', u'künstler-informationen',
                          'externer link', 'rights', 'artist information', 'provenance',
                          'external link', 'title', 'further_information', 'acquisition_method',
                          'date', 'artist', 'inscriptions', 'null', 'title', 'inventory_number',
-                         'artist_biography', 'creator', 'terms_of_use', 'location',
+                         'artist_biography', 'creator', 'terms_of_use',
                          'artist/maker', 'title_in_swedish', 'credit_line', 'exhibition',
                          'curator', 'proveniens', 'dansk_link', 'dansk_titel', 'work_notes',
                          'attributed_to', 'title_in_swedish', 'signature', 'periodic_title',

@@ -46,6 +46,7 @@ class ArtistItem(Item):
     bio = Field()
     wiki_url = Field()
     years_of_life = Field()
+    total_items_count = Field()
 
 
 class VisitedUrlItem(Item):

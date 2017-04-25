@@ -25,7 +25,9 @@ class MongoDBPipeline(object):
         )
         db = connection[settings['MONGODB_DB']]
         self.collection_artworks = db[settings['MONGODB_COLLECTION_ARTWORKS']]
+        self.collection_artworks.create_index('image_id', unique=True)
         self.collection_artists = db[settings['MONGODB_COLLECTION_ARTISTS']]
+        self.collection_artists.create_index('artist_id', unique=True)
         self.collection_visited_urls = db[settings['MONGODB_VISITED_URLS']]
         self.collection_visited_urls.create_index('hash', unique=True)
 
