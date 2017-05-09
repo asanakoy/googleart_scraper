@@ -30,9 +30,10 @@ class GoogleartCrawlSpider(CrawlSpider):
     # allowed_domains = ['google.com']
     START_ARTIST = 0
     NUM_ARTISTS_TO_GET = 6000
+    request_id = '{:06d}'.format(random.randint(0, 999999))
     START_URLS = [('https://www.google.com/culturalinstitute/beta/u/0/api/objects/'
-                   'category?categoryId=artist&s={}&tab=pop&o={}&hl=en&_reqid=508028&rt=j')
-        .format(NUM_ARTISTS_TO_GET, START_ARTIST)]
+                   'category?categoryId=artist&s={}&tab=pop&o={}&hl=en&_reqid={}&rt=j')
+        .format(NUM_ARTISTS_TO_GET, START_ARTIST, request_id)]
 
     artist_id_reg = re.compile(r'entity/([a-zA-Z].+?)(?:[?/]|$)')
 
@@ -79,8 +80,8 @@ class GoogleartCrawlSpider(CrawlSpider):
             artist_slug = artist['name'].lower().replace(' ', '-')
             artist_id = artist['artist_id']
             count = 0
-            if artist_slug in artist_slug_vc:
-                count = max(count, artist_slug_vc[artist_slug])
+            # if artist_slug in artist_slug_vc:
+            #     count = max(count, artist_slug_vc[artist_slug])
             if artist_id in artist_id_vc:
                 count = max(count, artist_id_vc[artist_id])
             works_count[artist_id] = count
@@ -155,6 +156,7 @@ class GoogleartCrawlSpider(CrawlSpider):
             should_skip_artist = False
             if artist_id in self.in_db_artists_df.index:
                 artist_in_db = self.in_db_artists_df.loc[artist_id].to_dict()
+                artist_in_db['artist_id'] = artist_id
                 if not data_utils.is_valid_artist(artist_in_db):
                     should_skip_artist = True
                 elif total_items_count > artist_in_db['total_items_count']:
@@ -210,7 +212,10 @@ class GoogleartCrawlSpider(CrawlSpider):
         request_id = '{:04d}'.format(random.randint(0, 9999))
         # TODO:
         name = response.xpath('//*[@id="yDmH0d"]/div[3]/header/div[2]/h1/text()').extract_first()
-        print 'Artist name:', name
+        try:
+            print 'Artist name:', name.encode('utf-8')
+        except:
+            pass
         years_of_life = response.xpath('//*[@id="yDmH0d"]/div[3]/header/div[2]/h2/text()').extract_first()
         bio = '\n'.join(response.xpath('//*[@id="yDmH0d"]/div[3]/div/div[1]/div/div[1]/text()').extract())
         wiki_url = response.xpath('//*[@id="yDmH0d"]/div[3]/div/div[1]/div/div[2]/a/@href').extract_first()
@@ -269,10 +274,11 @@ class GoogleartCrawlSpider(CrawlSpider):
 
         for artwork_obj in artworks_array:
             artwork_item = self.build_artwork_item(artwork_obj, response.meta['artist_slug'])
+            artwork_item['artist_id'] = response.meta['artist_id']
             yield artwork_item
             yield Request(artwork_item['image_url'],
                           callback=self.parse_image,
-                          meta={'image_id': artwork_item['image_id']})
+                          meta={'image_id': artwork_item['image_id']}, priority=10)
             yield Request(artwork_item['page_url'], callback=self.parse_artwork,
                           meta={'image_id': artwork_item['image_id']})
 
@@ -338,7 +344,8 @@ class GoogleartCrawlSpider(CrawlSpider):
                          'object_credit_line', 'bibliography', 'creator', 'external_link'
                          ]
         words_to_skip = ['signature', 'inscription', 'accession', 'credit',
-                          'exhibition', 'title', 'rights', 'terms', 'museum', 'inventory']
+                          'exhibition', 'title', 'rights', 'terms', 'museum', 'inventory',
+                         'no.']
 
         for cur_property in artwork_description:
             cur_property[0] = cur_property[0].lower()
@@ -365,7 +372,7 @@ class GoogleartCrawlSpider(CrawlSpider):
                         break
                 should_skip |= cur_property[0] in props_to_skip
                 if not should_skip:
-                    prop_name = cur_property[0].replace(' ', '_')
+                    prop_name = cur_property[0].replace(' ', '_').replace('.', '-')
                     artwork_item['other'][prop_name] = get_list_property(cur_property)
         yield artwork_item
         yield VisitedUrlItem(url=response.url)
@@ -377,4 +384,4 @@ class GoogleartCrawlSpider(CrawlSpider):
             with open(image_path, 'wb') as f:
                 f.write(response.body)
                 self.logger.info('Downloaded image %s', image_path)
-            return VisitedUrlItem(url=response.url)
+        return VisitedUrlItem(url=response.url)
